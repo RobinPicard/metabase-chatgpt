@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Extension Options</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      input[type="text"] {
+        width: 300px;
+        font-size: 16px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      button {
+        font-size: 16px;
+        padding: 8px 16px;
+        background-color: #4CAF50;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>My Extension Options</h1>
+    <form id="options-form">
+      <label for="api-key">API Key:</label>
+      <input type="text" id="api-key" name="api-key" placeholder="Enter your API key">
+      <br>
+      <button type="submit" id="save-button">Save</button>
+      <p id="message" class="message"></p>
+    </form>
+    <script src="options.js"></script>
+  </body>
+</html>
