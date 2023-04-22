@@ -12,9 +12,10 @@
     "activeTab",
     "tabs",
     "scripting",
-    "storage",
-    "https://*.metabase.*/*",
-    "https://metabase.pennylane.tech/*"
+    "storage"
+  ],
+  "host_permissions": [
+    "*://*/question*"
   ],
   "options_page": "options.html",
   "background": {

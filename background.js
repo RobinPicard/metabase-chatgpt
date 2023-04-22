@@ -44,12 +44,14 @@ function formattingFeatureRoot() {
     var queryEditorTextarea = document.querySelector('textarea.ace_text-input');
   
     currentQuery = getCurrentQuery()
-    chatgptRequest(currentQuery)
-    deleteCurrentQuery(currentQuery.length)
+    //chatgptRequest(currentQuery)
+    //deleteCurrentQuery(currentQuery.length)
   
     function getCurrentQuery() {
       // get the current content of the query editor
       var queryContent = '';
+      console.log(queryEditorDisplayRoot)
+      console.log(queryEditorDisplayRoot.children)
       for (let i = 0; i < queryEditorDisplayRoot.children.length; i++) {
         const row = queryEditorDisplayRoot.children[i];
         queryContent += row.textContent;
