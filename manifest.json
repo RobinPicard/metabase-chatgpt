@@ -24,7 +24,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["injectedScriptStoreUpdates.js"],
+      "resources": ["injectedScriptStoreUpdates.js", "images/*"],
       "matches": ["*://*/*"]
     }
   ],

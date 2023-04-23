@@ -1,21 +1,27 @@
 const reduxStore = document.querySelector('#root')._reactRootContainer._internalRoot.current.memoizedState.element.props.store
 var latestQueryContent = undefined
+var latestQueryError = undefined
 
 // triggered by each update of the store, check whether the fields that interest us have changed
 const onReduxStoreStateUpdate = () => {
   const state = reduxStore.getState()
   const queryContent = state?.qb?.card?.dataset_query?.native?.query
   if (queryContent !== latestQueryContent) {
-    sendMessageQueryContent(queryContent);
+    sendMessage(queryContent, 'METABASE_CHATGPT_QUERY_CONTENT_STATE');
     latestQueryContent = queryContent;
+  }
+  const queryError = state?.qb?.queryResults ? state?.qb?.queryResults[0]?.error : undefined
+  if (queryError !== latestQueryError) {
+    sendMessage(queryError, 'METABASE_CHATGPT_QUERY_ERROR_STATE');
+    latestQueryError = queryError;
   }
 }
 
 // Send updates of the store's state via postMessage
-const sendMessageQueryContent = (queryContent) => {
+const sendMessage = (content, type) => {
   window.postMessage({
-    type: 'METABASE_CHATGPT_QUERY_CONTENT_STATE',
-    payload: queryContent
+    type: type,
+    payload: content
   }, '*');
 };
 
