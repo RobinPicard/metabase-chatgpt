@@ -12,7 +12,8 @@
     "activeTab",
     "tabs",
     "scripting",
-    "storage"
+    "storage",
+    "webNavigation"
   ],
   "host_permissions": [
     "*://*/question*"
@@ -21,6 +22,12 @@
   "background": {
     "service_worker": "background.js"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["injectedScriptStoreUpdates.js"],
+      "matches": ["*://*/*"]
+    }
+  ],
   "action": {
     "default_popup": "popup.html"
   }
