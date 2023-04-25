@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Metabase - Chatgpt Options</title>
+    <link rel="stylesheet" type="text/css" href="popup.css">
+  </head>
+  <body>
+    <header>
+      <img src="images/icon128.png">
+      <h1>Metabase - Chatgpt</h1>
+    </header>
+    <div id="status-container">
+      <span id="status-label">Status:</span>
+      <span id="status-value"></span>
+    </div>
+    <div id="main">
+      <p id="api-key-paragraph">Please enter a valid API key for your OpenAI account to access the service.</p>
+      <a id="api-key-link" href="https://platform.openai.com/account/api-keys" target="_blank">
+        <span>learn more here</span>
+        <img src="images/linkIcon.png">
+      </a>
+      <div id="input-container">
+        <p>API key:</p>
+        <input type="text" name="api-key" id="api-input">
+      </div>
+      <div id="submit-container">
+        <span id="error-message"></span>
+        <div id="submit-button">Submit</div>
+      </div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

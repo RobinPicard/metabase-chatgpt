@@ -1,0 +1,25 @@
+dist/
+node_modules/
+
+# Cache and temporary files
+.cache/
+*.log
+npm-debug.log*
+
+# IDE and editor folders and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.bak
+*.tmp
+*.sublime*
+*.iml
+*.DS_Store
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+._*

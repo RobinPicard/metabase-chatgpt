@@ -1,65 +1,56 @@
-// style
-
-errorPopupStyle = {
-  position: "absolute",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "flex-end",
-  top: "50px",
-  right: "100px",
-  maxWidth: "300px",
-  padding: "5px 5px 15px 5px",
-  backgroundColor: "#509ee333",
-  borderRadius: "5px",
-  gap: "2px",
-}
-errorPopupDismissStyle = {
-  width: "20px",
-  height: "20px",
-  padding: "4px",
-  cursor: "pointer",
-  boxSizing: "border-box",
-}
-errorPopupTextStyle = {
-  fontSize: "14px",
-  lineHeight: "18px",
-  color: "#509ee3",
-  fontWeight: 600,
-  padding: "0px 10px",
-}
-
-function applyStyle(element, styleObject) {
-  for (const property in styleObject) {
-    element.style[property] = styleObject[property];
-  }
-}
+import findLineRankCharacterPosition from './utils/findLineRankCharacterPosition.js'
+import findErrorCharacterPositionInMessage from './utils/findErrorCharacterPositionInMessage.js'
+import findErrorMessageFromHtml from './utils/findErrorMessageFromHtml.js'
+import pasteTextIntoElement from './utils/pasteTextIntoElement.js'
+import deleteTextInputElement from './utils/deleteTextInputElement.js'
+import chatgptStreamRequest from './utils/chatgptStreamRequest.js'
+import formatQueryButtonElement from './components/formatQueryButtonElement.js'
+import promptQueryButtonElement from './components/promptQueryButtonElement.js'
+import revertQueryButtonElement from './components/revertQueryButtonElement.js'
+import updateQueryContainerElement from './components/updateQueryContainerElement.js'
+import databaseErrorButtonElement from './components/databaseErrorButtonElement.js'
+import databaseErrorPopupElement from './components/databaseErrorPopupElement.js'
+import getComponentIdFromVariable from './utils/getComponentIdFromVariable.js'
+import findPromptContentFromText from './utils/findPromptContentFromText.js'
+import addEmptyPatternText from './utils/addEmptyPatternText.js'
+import buildErrorMessageDisplay from './utils/buildErrorMessageDisplay.js'
 
 
-
-//////////
-
-var queryContent = undefined
-var queryError = undefined
 var previousQueryContents = []
+var isQueryEditRunning = false
+var isQueryEditDeactivated = false
+
+
+////////// metabase redux store states's variables and listener //////////
+
+
+var storeQueryContent = undefined
+var storeQueryError = undefined
   
 function setStoreListener() {
   // inject the script
   const injectedScriptStoreUpdates = document.createElement('script');
   injectedScriptStoreUpdates.src = chrome.runtime.getURL('injectedScriptStoreUpdates.js');
   (document.head || document.documentElement).appendChild(injectedScriptStoreUpdates);
-  // listen from messages from the script about updates of the queryContent
+  // listen from messages from the script about updates of the store states
   window.addEventListener('message', (event) => {
     if (event.source !== window) {
       return
     };
     if (event.data.type && event.data.type === 'METABASE_CHATGPT_QUERY_CONTENT_STATE') {
-      queryContent = event.data.payload;
+      storeQueryContent = event.data.payload;
     }
     if (event.data.type && event.data.type === 'METABASE_CHATGPT_QUERY_ERROR_STATE') {
-      queryError = event.data.payload;
+      storeQueryError = event.data.payload;
     }
   });
 }
+
+setStoreListener()
+
+
+////////// check the state of the DOM to see whether our elements should be inserted/removed //////////
+
 
 function setupElements() {
 
@@ -70,78 +61,63 @@ function setupElements() {
 
   function setupFormatElement() {
     var openedEditorCloseLinkElement = document.querySelector('div.NativeQueryEditor a.Query-label:not(.hide)');
-    var formatQueryButtonsContainer = document.querySelector('#metabase-chatgpt-format-query-button-container');
-    if (!formatQueryButtonsContainer && !openedEditorCloseLinkElement) {
+    var existingUpdateQueryContainerElement = document.getElementById(getComponentIdFromVariable({updateQueryContainerElement}))
+    if (!existingUpdateQueryContainerElement && !openedEditorCloseLinkElement) {
       return
     }
-    if (formatQueryButtonsContainer && openedEditorCloseLinkElement) {
+    if (existingUpdateQueryContainerElement && openedEditorCloseLinkElement) {
       return
     }
-    if (formatQueryButtonsContainer && !openedEditorCloseLinkElement) {
-      formatQueryButtonsContainer.remove();
+    if (existingUpdateQueryContainerElement && !openedEditorCloseLinkElement) {
+      existingUpdateQueryContainerElement.remove();
       return
     }
-    if (!formatQueryButtonsContainer && openedEditorCloseLinkElement) {
-      constButtonStyle = "height: 32px; line-height: 32px; padding: 0px 10px; color: #509ee3; background-color: #509ee333; border-radius: 5px; cursor: pointer; font-weight: 600;"
+    if (!existingUpdateQueryContainerElement && openedEditorCloseLinkElement) {
       const parentElement = openedEditorCloseLinkElement.parentNode
       //
-      formatQueryButtonsContainer = document.createElement('div');
-      formatQueryButtonsContainer.id = "metabase-chatgpt-format-query-button-container";
-      formatQueryButtonsContainer.style = "display: flex; gap: 16px"
-      //
-      formatQueryButton = document.createElement('div');
-      formatQueryButton.className = "format"
-      formatQueryButton.style = constButtonStyle
-      formatQueryButton.innerHTML = "Reformat"
-      //
-      revertFormatQueryButton = document.createElement('div');
-      revertFormatQueryButton.className = "revert"
-      revertFormatQueryButton.style = constButtonStyle
-      revertFormatQueryButton.innerHTML = "Revert"
-      revertFormatQueryButton.style.display = "none"
-      //
-      formatQueryButtonsContainer.appendChild(revertFormatQueryButton);
-      formatQueryButtonsContainer.appendChild(formatQueryButton);
-      parentElement.insertBefore(formatQueryButtonsContainer, parentElement.firstChild);
-      formatQueryButton.addEventListener('click', function(event) {
-        mainFormatQuery()
-      });
-      revertFormatQueryButton.addEventListener('click', function(event) {
-        mainRevertFormatQuery()
-      });
+      updateQueryContainerElement.appendChild(revertQueryButtonElement);
+      updateQueryContainerElement.appendChild(promptQueryButtonElement);
+      updateQueryContainerElement.appendChild(formatQueryButtonElement);
+      parentElement.insertBefore(updateQueryContainerElement, parentElement.firstChild);
     }
   }
 
   function setupErrorElement() {
-    console.log('coucou')
     var iconWarningElement = document.querySelector('svg.Icon.Icon-warning');
-    var errorButton = document.querySelector("#metabase-chatgpt-error-button");
-
-    if (!iconWarningElement && !errorButton) {
+    var existingDatabaseErrorButtonElement = document.getElementById(getComponentIdFromVariable({databaseErrorButtonElement}));
+    if (!iconWarningElement && !existingDatabaseErrorButtonElement) {
       return
     }
-    if (iconWarningElement && errorButton) {
+    if (iconWarningElement && existingDatabaseErrorButtonElement) {
       return
     }
-    if (!iconWarningElement && errorButton) {
-      errorButton.remove();
+    if (!iconWarningElement && existingDatabaseErrorButtonElement) {
+      existingDatabaseErrorButtonElement.remove();
+      const existingdatabaseErrorPopupElement = document.getElementById(getComponentIdFromVariable({databaseErrorPopupElement}));
+      if (existingdatabaseErrorPopupElement) {
+        existingdatabaseErrorPopupElement.remove()
+      }
       return
     }
-    if (iconWarningElement && !errorButton) {
-      console.log('yay')
+    if (iconWarningElement && !existingDatabaseErrorButtonElement) {
       var vizualizationRootElement = document.querySelector('div.spread.Visualization')
-      //
-      errorButton = document.createElement('div');
-      errorButton.id = "metabase-chatgpt-error-button";
-      errorButton.style = "position: absolute; top: 0; right: 16px; height: 32px; line-height: 32px; padding: 0px 10px; color: #509ee3; background-color: #509ee333; border-radius: 5px; cursor: pointer; font-weight: 600;"
-      errorButton.innerHTML = "Explain"
-      //
-      vizualizationRootElement.appendChild(errorButton);
-      errorButton.addEventListener('click', function(event) {
-        mainInterpretError()
-      });
+      vizualizationRootElement.appendChild(databaseErrorButtonElement);
     }
   }
+
+  // Add the listeners to the elements
+  promptQueryButtonElement.addEventListener('click', function(event) {
+    mainPromptQuery()
+  });
+  formatQueryButtonElement.addEventListener('click', function(event) {
+    mainFormatQuery()
+  });
+  revertQueryButtonElement.addEventListener('click', function(event) {
+    mainRevertQuery()
+  });
+  databaseErrorButtonElement.addEventListener('click', function(event) {
+    mainDatabaseError()
+  });
 
   // Setup the DOM change observer
   const observer = new MutationObserver(onElementAddedOrRemoved);
@@ -153,214 +129,158 @@ function setupElements() {
   observer.observe(targetElement, config);
 } 
 
-
-setStoreListener()
 setupElements()
 
 
-//////////////////////
+////////// Query-edition functions //////////
+
+
+function mainPromptQuery() {
+
+  if (isQueryEditRunning || isQueryEditDeactivated) {
+    return
+  }
+
+  var queryEditorTextarea = document.querySelector('textarea.ace_text-input');
+  previousQueryContents.push(storeQueryContent)
+  document.getElementById(getComponentIdFromVariable({revertQueryButtonElement})).style.display = "block"
+  deleteTextInputElement(queryEditorTextarea, storeQueryContent)
+  const patternMatch = findPromptContentFromText(storeQueryContent)
+
+  if (!patternMatch) {
+    const updatedQueryContent = addEmptyPatternText(storeQueryContent)
+    pasteTextIntoElement(queryEditorTextarea, updatedQueryContent)
+  } else {
+    const prompt = `I'm giving you 1st a sql query and then an instruction prompt. Respond with only the updated query. ${patternMatch.textWithoutPattern}; ${patternMatch.matchAlone}`
+    pasteTextIntoElement(queryEditorTextarea, `${patternMatch.matchWithPattern}\n\n`)
+    var responseContentQueu = ""
+    chatgptStreamRequest(prompt, onApiResponseData, onApiRequestError)
+    document.getElementById(getComponentIdFromVariable({revertQueryButtonElement})).style.display = "block"
+  }
+
+  function onApiRequestError(errorReason, errorMessage) {
+    const variableMessage = buildErrorMessageDisplay(errorReason, errorMessage)
+    const errorMessageToInsert = `/*\n${variableMessage}\n*/`
+    // update the last value of previousQueryContents by replacing the pattern by the error message and then call mainRevertQuery
+    const previousQueryContentsLastIndex = previousQueryContents.length - 1;
+    const previousQueryWithoutPattern = findPromptContentFromText(previousQueryContents[previousQueryContentsLastIndex]).textWithoutPattern
+    previousQueryContents[previousQueryContentsLastIndex] = errorMessageToInsert + previousQueryWithoutPattern
+    mainRevertQuery()
+  }
+
+  function onApiResponseData(content, isFinished) {
+    isQueryEditRunning = !isFinished
+    // dirty way of ignoring the running async function after cancellation
+    if (isQueryEditDeactivated && isFinished) {
+      isQueryEditDeactivated = false;
+    }
+    if (isQueryEditDeactivated) {
+      return
+    }
+    responseContentQueu += content
+    if (!responseContentQueu.endsWith("\n") || (isFinished)) {
+      pasteTextIntoElement(queryEditorTextarea, responseContentQueu)
+      responseContentQueu = ""
+    }
+  }
+}
 
 
 function mainFormatQuery() {
-  if (!queryContent) {
+
+  if (!storeQueryContent || isQueryEditRunning || isQueryEditDeactivated) {
     return
   }
-  previousQueryContents.push(queryContent)
-  document.querySelector('#metabase-chatgpt-format-query-button-container div.revert').style.display = "block"
-  deleteCurrentQuery(queryContent)
-  chatgptFormatRequest(queryContent)
+  previousQueryContents.push(storeQueryContent)
+
+  var queryEditorTextarea = document.querySelector('textarea.ace_text-input');
+  const prompt = `Reformat the query with sqlfluff best practices (4-space indentation, line breaks after SELECT/FROM/WHERE, one column per line for SELECT, commmands in uppercase). Respond with only the updated query: "${storeQueryContent}"`
+  var responseContentQueu = ""
+
+  deleteTextInputElement(queryEditorTextarea, storeQueryContent)
+  chatgptStreamRequest(prompt, onApiResponseData, onApiRequestError)
+  document.getElementById(getComponentIdFromVariable({revertQueryButtonElement})).style.display = "block"
+
+  function onApiRequestError(errorReason, errorMessage) {
+    const variableMessage = buildErrorMessageDisplay(errorReason, errorMessage)
+    const errorMessageToInsert = `/*\n${variableMessage}\n*/\n`
+    // update the last value of previousQueryContents by replacing the pattern by the error message and then call mainRevertQuery
+    const previousQueryContentsLastIndex = previousQueryContents.length - 1;
+    previousQueryContents[previousQueryContentsLastIndex] = errorMessageToInsert + previousQueryContents[previousQueryContentsLastIndex]
+    mainRevertQuery()
+  }
+  
+  function onApiResponseData(content, isFinished) {
+    isQueryEditRunning = !isFinished
+    // dirty way of ignoring the running async function after cancellation
+    if (isQueryEditDeactivated && isFinished) {
+      isQueryEditDeactivated = false;
+    }
+    if (isQueryEditDeactivated) {
+      return
+    }
+    responseContentQueu += content
+    if (!responseContentQueu.endsWith("\n") || (isFinished)) {
+      pasteTextIntoElement(queryEditorTextarea, responseContentQueu)
+      responseContentQueu = ""
+    }
+  }
 }
 
-function mainRevertFormatQuery() {
+
+function mainRevertQuery() {
   if (previousQueryContents.length === 0) {
     return
   }
-  deleteCurrentQuery(queryContent)
-  pasteTextQueryEditor(previousQueryContents.pop())
+  if (isQueryEditRunning) {
+    isQueryEditDeactivated = true;
+  }
+  var queryEditorTextarea = document.querySelector('textarea.ace_text-input');
+  deleteTextInputElement(queryEditorTextarea, storeQueryContent)
+  pasteTextIntoElement(queryEditorTextarea, previousQueryContents.pop())
   if (previousQueryContents.length === 0) {
-    document.querySelector('#metabase-chatgpt-format-query-button-container div.revert').style.display = "none"
+    document.getElementById(getComponentIdFromVariable({revertQueryButtonElement})).style.display = "none"
   }
 }
 
 
-function deleteCurrentQuery(query) {
-  // remove the current query text from the editor
-  if (!query) {
-    return
-  }
-  var queryEditorTextarea = document.querySelector('textarea.ace_text-input');
-  const deleteEvent = new KeyboardEvent('keydown', { keyCode: 46 });
-  queryEditorTextarea.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-  for (let i = 0; i < query.length; i++) {
-    queryEditorTextarea.dispatchEvent(deleteEvent);
-  }
-}
+////////// Database error function //////////
 
-function pasteTextQueryEditor(query) {
-  // insert into the query editor's textarea the answer from chatgpt
-  if (!query) {
-    return
-  }
-  var queryEditorTextarea = document.querySelector('textarea.ace_text-input');
-  const pasteEvent = new ClipboardEvent('paste', {
-    clipboardData: new DataTransfer(),
-  });
-  pasteEvent.clipboardData.setData('text/plain', query);
-  queryEditorTextarea.dispatchEvent(pasteEvent)
-}
 
-function chatgptFormatRequest(query) {
-  // make a post request to chatgpt to get the updated query content
+function mainDatabaseError() {
 
-  chrome.storage.sync.get('metabase_chatgpt_api_key', function(result) {
-    if (result.metabase_chatgpt_api_key) {
-      postRequest(result.metabase_chatgpt_api_key, query)
+  displayErrorPopupElement()
+  // if we can find it, use the error message from the html elements, otherwise stick to the one from the store
+  var errorMessage = storeQueryError
+  const elementErrorMessage = findErrorMessageFromHtml(document.querySelector('div.spread.Visualization'))
+  if (elementErrorMessage) {
+    const errorCharacterPosition = findErrorCharacterPositionInMessage(elementErrorMessage)
+    if (errorCharacterPosition) {
+      const errorLineRank = findLineRankCharacterPosition(elementErrorMessage, errorCharacterPosition)
+      databaseErrorPopupElement.setAttribute("error-message", `Error at line ${errorLineRank}.\n`)
     }
-  });
+    errorMessage = elementErrorMessage
+  }
+  const prompt = `${storeQueryContent};\n${errorMessage};\n Here you have 1st a query and then the db error it returned, give the most likely explanation for the origin of the error`
+  chatgptStreamRequest(prompt, onApiResponseData, onApiRequestError)
 
-  async function postRequest(apiKey, query) {
-    // make the post request to chatgpt and display the result progressively as it comes
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-          "model": "gpt-3.5-turbo",
-          "messages": [{"role": "user", "content": `Reformat the query with sqlfluff best practices (4-space indentation, line breaks after SELECT/FROM/WHERE, one column per line for SELECT, commmands in uppercase). Respond with only the updated query: "${query}"`}],
-          "temperature": 0,
-          "stream": true,
-      })
-    })
+  function onApiRequestError(errorReason, errorMessage) {
+    const variableErrorMessage = buildErrorMessageDisplay(errorReason, errorMessage)
+    onApiResponseData(variableErrorMessage)
+  }
   
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    const regex = /data: ({.*?})(?=\n|$)/g;
-    var queuResult = ""
-    var completeResult = ""
-
-    function readStream() {
-      return reader.read().then(({ done, value }) => {
-        if (done) {
-          console.log(completeResult)
-          return pasteTextQueryEditor(queuResult)
-        }
-        const streamData = decoder.decode(value)
-        let match;
-        while ((match = regex.exec(streamData)) !== null) {
-          const content = JSON.parse(match[1]).choices[0].delta.content
-          if (content) {
-            queuResult += content
-            completeResult += content
-          }
-        }
-        if (!queuResult.endsWith("\n")) {
-          pasteTextQueryEditor(queuResult)
-          queuResult = ""
-        }
-        return readStream();
-      });
-    }
-    await readStream();
+  function onApiResponseData(content) {
+    const previousContent = databaseErrorPopupElement.getAttribute("error-message")
+    databaseErrorPopupElement.setAttribute("error-message", previousContent+content)
   }
-}
 
-
-///////////
-
-
-function mainInterpretError() {
-  createErrorPopupElement()
-  console.log(`Here are a db error messsage and the query that caused it, give the most likely explanation for the origin of the error in <500 characters (start with giving the line at which there's the error)\n${queryError};\n${queryContent};`)
-  chatgptErrorRequest(queryContent, queryError)
-}
-
-function createErrorPopupElement() {
-  //
-  var errorPopup = document.querySelector("#metabase-chatgpt-error-popup");
-  if (errorPopup) {
-    return
-  }
-  var vizualizationRootElement = document.querySelector('div.spread.Visualization')
-  //
-  errorPopup = document.createElement('div');
-  errorPopup.id = "metabase-chatgpt-error-popup";
-  applyStyle(errorPopup, errorPopupStyle)
-  //
-  errorPopupDismiss = document.createElement('img');
-  errorPopupDismiss.className = "dissmiss";
-  applyStyle(errorPopupDismiss, errorPopupDismissStyle)
-  errorPopupDismiss.src = chrome.runtime.getURL("images/dismissIcon.png")
-  errorPopupDismiss.addEventListener('click', function(event) {
-    errorPopup.remove()
-  });
-  //
-  errorPopupText = document.createElement('div');
-  errorPopupText.className = "text";
-  applyStyle(errorPopupText, errorPopupTextStyle)
-  //
-  errorPopup.appendChild(errorPopupDismiss)
-  errorPopup.appendChild(errorPopupText)
-  vizualizationRootElement.appendChild(errorPopup);
-}
-
-
-
-
-function chatgptErrorRequest(query, error) {
-  // make a post request to chatgpt to get the updated query content
-
-  chrome.storage.sync.get('metabase_chatgpt_api_key', function(result) {
-    if (result.metabase_chatgpt_api_key) {
-      postRequest(result.metabase_chatgpt_api_key, query, error)
+  function displayErrorPopupElement() {
+    if (document.getElementById(getComponentIdFromVariable({databaseErrorPopupElement}))) {
+      databaseErrorPopupElement.remove()
+      databaseErrorPopupElement.setAttribute("error-message", "")
     }
-  });
-
-  async function postRequest(apiKey, query, error) {
-    // make the post request to chatgpt and display the result progressively as it comes
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-          "model": "gpt-3.5-turbo",
-          "messages": [{"role": "user", "content": `${query};\n${error};\n Here you have 1st a query and then the db error it returned, give the most likely explanation for the origin of the error`}],
-          "temperature": 0,
-          "stream": true,
-      })
-    })
-
-    console.log("b")
-  
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    const regex = /data: ({.*?})(?=\n|$)/g;
-    const textElement = document.querySelector('#metabase-chatgpt-error-popup div.text')
-
-    console.log("textElement", textElement)
-
-    function readStream() {
-      return reader.read().then(({ done, value }) => {
-        if (done) {
-          console.log(completeResult)
-          return
-        }
-        const streamData = decoder.decode(value)
-        let match;
-        while ((match = regex.exec(streamData)) !== null) {
-          const content = JSON.parse(match[1]).choices[0].delta.content
-          if (content) {
-            textElement.innerHTML += content
-          }
-        }
-        return readStream();
-      });
-    }
-    await readStream();
+    var vizualizationRootElement = document.querySelector('div.spread.Visualization')
+    vizualizationRootElement.appendChild(databaseErrorPopupElement);
   }
+
 }
-
-
