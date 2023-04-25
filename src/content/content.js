@@ -1,19 +1,19 @@
-import findLineRankCharacterPosition from './utils/findLineRankCharacterPosition.js'
-import findErrorCharacterPositionInMessage from './utils/findErrorCharacterPositionInMessage.js'
-import findErrorMessageFromHtml from './utils/findErrorMessageFromHtml.js'
-import pasteTextIntoElement from './utils/pasteTextIntoElement.js'
-import deleteTextInputElement from './utils/deleteTextInputElement.js'
-import chatgptStreamRequest from './utils/chatgptStreamRequest.js'
-import formatQueryButtonElement from './components/formatQueryButtonElement.js'
-import promptQueryButtonElement from './components/promptQueryButtonElement.js'
-import revertQueryButtonElement from './components/revertQueryButtonElement.js'
-import updateQueryContainerElement from './components/updateQueryContainerElement.js'
-import databaseErrorButtonElement from './components/databaseErrorButtonElement.js'
-import databaseErrorPopupElement from './components/databaseErrorPopupElement.js'
-import getComponentIdFromVariable from './utils/getComponentIdFromVariable.js'
-import findPromptContentFromText from './utils/findPromptContentFromText.js'
-import addEmptyPatternText from './utils/addEmptyPatternText.js'
-import buildErrorMessageDisplay from './utils/buildErrorMessageDisplay.js'
+import findLineRankCharacterPosition from '../utils/findLineRankCharacterPosition.js'
+import findErrorCharacterPositionInMessage from '../utils/findErrorCharacterPositionInMessage.js'
+import findErrorMessageFromHtml from '../utils/findErrorMessageFromHtml.js'
+import pasteTextIntoElement from '../utils/pasteTextIntoElement.js'
+import deleteTextInputElement from '../utils/deleteTextInputElement.js'
+import chatgptStreamRequest from '../utils/chatgptStreamRequest.js'
+import formatQueryButtonElement from '../components/formatQueryButtonElement.js'
+import promptQueryButtonElement from '../components/promptQueryButtonElement.js'
+import revertQueryButtonElement from '../components/revertQueryButtonElement.js'
+import updateQueryContainerElement from '../components/updateQueryContainerElement.js'
+import databaseErrorButtonElement from '../components/databaseErrorButtonElement.js'
+import databaseErrorPopupElement from '../components/databaseErrorPopupElement.js'
+import getComponentIdFromVariable from '../utils/getComponentIdFromVariable.js'
+import findPromptContentFromText from '../utils/findPromptContentFromText.js'
+import addEmptyPatternText from '../utils/addEmptyPatternText.js'
+import buildErrorMessageDisplay from '../utils/buildErrorMessageDisplay.js'
 
 
 var previousQueryContents = []
@@ -30,7 +30,7 @@ var storeQueryError = undefined
 function setStoreListener() {
   // inject the script
   const injectedScriptStoreUpdates = document.createElement('script');
-  injectedScriptStoreUpdates.src = chrome.runtime.getURL('injectedScriptStoreUpdates.js');
+  injectedScriptStoreUpdates.src = chrome.runtime.getURL('dist/injectedScriptStoreUpdates.js');
   (document.head || document.documentElement).appendChild(injectedScriptStoreUpdates);
   // listen from messages from the script about updates of the store states
   window.addEventListener('message', (event) => {
@@ -159,12 +159,14 @@ function mainPromptQuery() {
   }
 
   function onApiRequestError(errorReason, errorMessage) {
+    console.log('onApiRequestError')
     const variableMessage = buildErrorMessageDisplay(errorReason, errorMessage)
     const errorMessageToInsert = `/*\n${variableMessage}\n*/`
-    // update the last value of previousQueryContents by replacing the pattern by the error message and then call mainRevertQuery
+    // copy the last value of previousQueryContents by replacing the pattern by the error message
     const previousQueryContentsLastIndex = previousQueryContents.length - 1;
     const previousQueryWithoutPattern = findPromptContentFromText(previousQueryContents[previousQueryContentsLastIndex]).textWithoutPattern
-    previousQueryContents[previousQueryContentsLastIndex] = errorMessageToInsert + previousQueryWithoutPattern
+    // use mainRevertQuery to update the display value by pushing our new value to previousQueryContents
+    previousQueryContents.push(errorMessageToInsert + previousQueryWithoutPattern)
     mainRevertQuery()
   }
 
@@ -198,19 +200,22 @@ function mainFormatQuery() {
   var responseContentQueu = ""
 
   deleteTextInputElement(queryEditorTextarea, storeQueryContent)
-  chatgptStreamRequest(prompt, onApiResponseData, onApiRequestError)
   document.getElementById(getComponentIdFromVariable({revertQueryButtonElement})).style.display = "block"
+  chatgptStreamRequest(prompt, onApiResponseData, onApiRequestError)
 
   function onApiRequestError(errorReason, errorMessage) {
+    console.log(errorReason, errorMessage)
     const variableMessage = buildErrorMessageDisplay(errorReason, errorMessage)
-    const errorMessageToInsert = `/*\n${variableMessage}\n*/\n`
-    // update the last value of previousQueryContents by replacing the pattern by the error message and then call mainRevertQuery
+    const errorMessageToInsert = `/*\n${variableMessage}\n*/\n\n`
+    // copy the last value of previousQueryContents and add before the error message
     const previousQueryContentsLastIndex = previousQueryContents.length - 1;
-    previousQueryContents[previousQueryContentsLastIndex] = errorMessageToInsert + previousQueryContents[previousQueryContentsLastIndex]
+    // use mainRevertQuery to update the display value by pushing our new value to previousQueryContents
+    previousQueryContents.push(errorMessageToInsert + previousQueryContents[previousQueryContentsLastIndex])
     mainRevertQuery()
   }
   
   function onApiResponseData(content, isFinished) {
+    console.log(content, isFinished)
     isQueryEditRunning = !isFinished
     // dirty way of ignoring the running async function after cancellation
     if (isQueryEditDeactivated && isFinished) {
@@ -229,6 +234,7 @@ function mainFormatQuery() {
 
 
 function mainRevertQuery() {
+  console.log(previousQueryContents.length, isQueryEditRunning)
   if (previousQueryContents.length === 0) {
     return
   }
@@ -238,6 +244,7 @@ function mainRevertQuery() {
   var queryEditorTextarea = document.querySelector('textarea.ace_text-input');
   deleteTextInputElement(queryEditorTextarea, storeQueryContent)
   pasteTextIntoElement(queryEditorTextarea, previousQueryContents.pop())
+  console.group(previousQueryContents.length)
   if (previousQueryContents.length === 0) {
     document.getElementById(getComponentIdFromVariable({revertQueryButtonElement})).style.display = "none"
   }

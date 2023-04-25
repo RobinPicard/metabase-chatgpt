@@ -9,7 +9,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
   if (url.includes("metabase") && url.includes("/question")) {
     chrome.scripting.executeScript({
       target: {tabId: tabId, allFrames: true},
-      files: ['dist/bundle.js'],
+      files: ['dist/content.js'],
     });
   }
 });

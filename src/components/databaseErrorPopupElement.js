@@ -1,5 +1,5 @@
 import applyStyleObjectElement from "./applyStyleObjectElement";
-import dismissIcon from '../images/dismissIcon.png'
+import dismissIcon from '../../assets/dismissIcon.png'
 import getComponentIdFromVariable from "../utils/getComponentIdFromVariable";
 
 const popupStyle = {

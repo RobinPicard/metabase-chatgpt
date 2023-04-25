@@ -1,5 +1,5 @@
 import applyStyleObjectElement from "./applyStyleObjectElement";
-import cleanIcon from '../images/cleanIcon.png'
+import cleanIcon from '../../assets/cleanIcon.png'
 import getComponentIdFromVariable from "../utils/getComponentIdFromVariable";
 
 const buttonStyle = {

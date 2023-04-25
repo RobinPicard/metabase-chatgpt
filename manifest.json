@@ -4,8 +4,8 @@
   "version": "1.0",
   "description": "Add helper features to Metabase through requests to the Chatgpt API",
   "icons": {
-    "128": "images/icon128.png",
-    "48": "images/icon48.png"
+    "128": "chrome_icons/icon128.png",
+    "48": "chrome_icons/icon48.png"
   },
   "permissions": [
     "activeTab",
@@ -18,16 +18,15 @@
     "*://*/question*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "dist/background.js"
   },
   "web_accessible_resources": [
     {
-      "resources": ["injectedScriptStoreUpdates.js", "dist/*", "images/*", "dist/images/*"],
+      "resources": ["dist/assets/*", "dist/injectedScriptStoreUpdates.js"],
       "matches": ["*://*/*"]
     }
   ],
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "dist/popup.html"
   }
 }
-  

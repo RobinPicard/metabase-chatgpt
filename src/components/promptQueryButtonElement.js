@@ -1,5 +1,5 @@
 import applyStyleObjectElement from "./applyStyleObjectElement";
-import magicWandIcon from '../images/magicWandIcon.png'
+import magicWandIcon from '../../assets/magicWandIcon.png'
 import getComponentIdFromVariable from "../utils/getComponentIdFromVariable";
 
 const buttonStyle = {

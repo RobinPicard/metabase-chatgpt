@@ -7,7 +7,7 @@ function chatgptStreamRequest(prompt, streamContentCallback, errorCallback) {
     } else if (result.metabase_chatgpt_api.status !== "valid") {
       apiError(result.metabase_chatgpt_api.key, null)
     } else {
-      postRequest("result.metabase_chatgpt_api.key", prompt, streamContentCallback)
+      postRequest(result.metabase_chatgpt_api.key, prompt, streamContentCallback)
     }
   });
 
