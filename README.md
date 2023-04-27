@@ -1,15 +1,15 @@
-# Metabase-chatgpt
+# Metabase - chatGPT
 
 ## Introduction
 
-Metabase-chatgpt is a Google Chrome extension allowing users to benefit from Openai's chatgpt within Metabase. Thus, the use of this extension requires having a credited Openai account as you'll need to provide an api key. On that topic, the extension stores the user's api key in Chrome's storage. Make sure that you're fine with that security-wise before starting to use Metabase-chatgpt. All featurs offered by Metabase-chatgpt are made for the native query editor page of Metabase.
+Metabase - chatGPT is a Google Chrome extension allowing users to benefit from Openai's chatGPT within Metabase. Thus, the use of this extension requires having a credited Openai account as you'll need to provide an api key. On that topic, the extension stores the user's api key in Chrome's storage. Make sure that you're fine with that security-wise before starting to use Metabase - chatGPT. All featurs offered by Metabase - chatGPT are made for the native query editor page of Metabase.
 
 ## Features
 
-Metabase-chatgpt currently has 3 main features (more will be added in the future hopefully):
+Metabase - chatGPT currently has 3 main features (more will be added in the future hopefully):
 - query prompt: allows the user to enter a prompt for a SQL query creation/edition within the editor as a comment (1st click on the associated button insert the SQL comment in which to enter the prompt, 2nd does the actual request to the api with the prompt)
-- query reformatting: asks chatgpt to reformat the SQL query to follow best practices
-- database error explanation: asks chatgpt to give the most likely explanation for the error considering the query that was run and the error returned. If the database error include a character position at which there's an error, the extension will provide the line on which there is this error (without using chatgpt)
+- query reformatting: asks chatGPT to reformat the SQL query to follow best practices
+- database error explanation: asks chatGPT to give the most likely explanation for the error considering the query that was run and the error returned. If the database error include a character position at which there's an error, the extension will provide the line on which there is this error (without using chatGPT)
 
 ## Installation and Use
 

@@ -3,27 +3,27 @@ import cleanIcon from '../../assets/cleanIcon.png'
 import getComponentIdFromVariable from "../utils/getComponentIdFromVariable";
 
 const buttonStyle = {
-  height: "35px",
+  height: "36px",
   display: "flex",
   flexDirection: "row",
   alignItems: "center",
-  padding: "9px 16px",
+  padding: "10px 16px",
   gap: "10px",
   color: "#509ee3",
   backgroundColor: "#519EE3",
-  borderRadius: "4px",
+  borderRadius: "5px",
   cursor: "pointer",
 }
 
 const imageStyle = {
-  width: "20px",
-  height: "20px",
+  width: "16px",
+  height: "16px",
 }
 
 const textStyle = {
   fontWeight: 600,
   fontSize: "14px",
-  lineHeight: "17px",
+  lineHeight: "16px",
   color: "#FFFFFF",
   
 }

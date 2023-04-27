@@ -1,6 +1,6 @@
 import './popup.css';
 import linkIcon from '../../assets/linkIcon.png'
-import icon128 from '../../assets/icon128.png'
+import icon512 from '../../assets/icon512.png'
 
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var headerIconElement = document.getElementById('header-icon-img');
 
   linkImageElement.src = linkIcon
-  headerIconElement.src = icon128
+  headerIconElement.src = icon512
 
   // Retrieve the previously saved API key and status from the Chrome storage
   chrome.storage.sync.get('metabase_chatgpt_api', function(result) {

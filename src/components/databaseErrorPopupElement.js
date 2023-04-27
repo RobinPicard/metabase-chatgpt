@@ -8,18 +8,18 @@ const popupStyle = {
   flexDirection: "column",
   alignItems: "flex-end",
   top: "50px",
-  right: "100px",
-  maxWidth: "300px",
-  padding: "5px 5px 15px 5px",
-  backgroundColor: "#509ee333",
+  right: "18px",
+  maxWidth: "380px",
+  padding: "0px 0px 24px 0px",
+  backgroundColor: "#F9FBFC",
   borderRadius: "5px",
-  gap: "2px",
+  gap: "0px",
 }
 
 const dismissStyle = {
-  width: "20px",
-  height: "20px",
-  padding: "4px",
+  width: "24px",
+  height: "24px",
+  padding: "8px",
   cursor: "pointer",
   boxSizing: "border-box",
 }
@@ -27,9 +27,9 @@ const dismissStyle = {
 const textStyle = {
   fontSize: "14px",
   lineHeight: "18px",
-  color: "#509ee3",
-  fontWeight: 600,
-  padding: "0px 10px",
+  color: "#519ee3",
+  fontWeight: 400,
+  padding: "0px 16px",
 }
 
 const databaseErrorPopupElement = document.createElement('div');

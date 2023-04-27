@@ -3,11 +3,11 @@ import getComponentIdFromVariable from "../utils/getComponentIdFromVariable";
 
 const buttonStyle = {
   position: "absolute",
-  top: "0",
+  top: "0px",
   right: "16px",
-  height: "32px",
-  lineHeight: "32px",
-  padding: "0px 10px",
+  height: "36px",
+  lineHeight: "36px",
+  padding: "0px 16px",
   color: "#509ee3",
   backgroundColor: "#509ee333",
   borderRadius: "5px",

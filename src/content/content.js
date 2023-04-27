@@ -14,11 +14,17 @@ import getComponentIdFromVariable from '../utils/getComponentIdFromVariable.js'
 import findPromptContentFromText from '../utils/findPromptContentFromText.js'
 import addEmptyPatternText from '../utils/addEmptyPatternText.js'
 import buildErrorMessageDisplay from '../utils/buildErrorMessageDisplay.js'
+import highlightErrorLine from '../utils/highlightErrorLine.js'
 
 
 var previousQueryContents = []
 var isQueryEditRunning = false
 var isQueryEditDeactivated = false
+var errorMessageDict = {
+  errorContent: null,
+  errorQuery: null,
+  shouldDisplay: false
+}
 
 
 ////////// metabase redux store states's variables and listener //////////
@@ -55,11 +61,12 @@ setStoreListener()
 function setupElements() {
 
   function onElementAddedOrRemoved(mutationList, observer) {
-    setupFormatElement()
-    setupErrorElement()
+    setupQueryEditingElements()
+    setupErrorExplanationElements()
+    errorLineDisplay(mutationList)
   }
 
-  function setupFormatElement() {
+  function setupQueryEditingElements() {
     var openedEditorCloseLinkElement = document.querySelector('div.NativeQueryEditor a.Query-label:not(.hide)');
     var existingUpdateQueryContainerElement = document.getElementById(getComponentIdFromVariable({updateQueryContainerElement}))
     if (!existingUpdateQueryContainerElement && !openedEditorCloseLinkElement) {
@@ -82,7 +89,7 @@ function setupElements() {
     }
   }
 
-  function setupErrorElement() {
+  function setupErrorExplanationElements() {
     var iconWarningElement = document.querySelector('svg.Icon.Icon-warning');
     var existingDatabaseErrorButtonElement = document.getElementById(getComponentIdFromVariable({databaseErrorButtonElement}));
     if (!iconWarningElement && !existingDatabaseErrorButtonElement) {
@@ -102,6 +109,68 @@ function setupElements() {
     if (iconWarningElement && !existingDatabaseErrorButtonElement) {
       var vizualizationRootElement = document.querySelector('div.spread.Visualization')
       vizualizationRootElement.appendChild(databaseErrorButtonElement);
+    }
+  }
+
+  function errorLineDisplay(mutationList) {
+
+    // messy part, to be refactored
+
+    const errorWarningElement = document.querySelector('svg.Icon.Icon-warning')
+    const lineElementsList = document.querySelectorAll('div.ace_gutter-cell');
+
+    // no error message in the page
+    if (!errorWarningElement) {
+      errorMessageDict = {
+        errorContent: null,
+        errorQuery: null,
+        shouldDisplay: false
+      }
+      highlightErrorLine(lineElementsList, -1)
+    } else {
+      // if there's an error message, we look at whether its content is equal to the previous value
+      const elementErrorMessage = findErrorMessageFromHtml(document.querySelector('div.spread.Visualization'))
+      if (!elementErrorMessage) {
+        // it's an error message without a character position, reset all colors (treat as if there's were no error)
+        errorMessageDict = {
+          errorContent: null,
+          errorQuery: null,
+          shouldDisplay: false
+        }
+        highlightErrorLine(lineElementsList, -1)
+      } else if (elementErrorMessage !== errorMessageDict.errorContent) {
+        // it's a new error message, display the color highlight
+        const errorCharacterPosition = findErrorCharacterPositionInMessage(elementErrorMessage)
+        const errorLineRank = findLineRankCharacterPosition(storeQueryContent, errorCharacterPosition)
+        errorMessageDict = {
+          errorContent: elementErrorMessage,
+          errorQuery: storeQueryContent,
+          shouldDisplay: true  
+        }
+        highlightErrorLine(lineElementsList, errorLineRank)
+      } else {
+        // if it's the same error message
+        if (!errorMessageDict.shouldDisplay) {
+          // it you should already not display, just update the value of query
+          errorMessageDict = {...errorMessageDict, errorQuery: storeQueryContent}
+        } else {
+          // if you're supposed to display
+          if (storeQueryContent === errorMessageDict.errorQuery) {
+            // if it's still the same query as before, try to display
+            const errorCharacterPosition = findErrorCharacterPositionInMessage(elementErrorMessage)
+            const errorLineRank = findLineRankCharacterPosition(storeQueryContent, errorCharacterPosition)
+            highlightErrorLine(lineElementsList, errorLineRank)
+          } else {
+            // if the query has changed, reset the display + change shouldDisplay to false
+            errorMessageDict = {
+              errorContent: elementErrorMessage,
+              errorQuery: storeQueryContent,
+              shouldDisplay: false  
+            }
+            highlightErrorLine(lineElementsList, -1)
+          }
+        }
+      }
     }
   }
 
@@ -159,7 +228,6 @@ function mainPromptQuery() {
   }
 
   function onApiRequestError(errorReason, errorMessage) {
-    console.log('onApiRequestError')
     const variableMessage = buildErrorMessageDisplay(errorReason, errorMessage)
     const errorMessageToInsert = `/*\n${variableMessage}\n*/`
     // copy the last value of previousQueryContents by replacing the pattern by the error message
@@ -204,7 +272,6 @@ function mainFormatQuery() {
   chatgptStreamRequest(prompt, onApiResponseData, onApiRequestError)
 
   function onApiRequestError(errorReason, errorMessage) {
-    console.log(errorReason, errorMessage)
     const variableMessage = buildErrorMessageDisplay(errorReason, errorMessage)
     const errorMessageToInsert = `/*\n${variableMessage}\n*/\n\n`
     // copy the last value of previousQueryContents and add before the error message
@@ -215,7 +282,6 @@ function mainFormatQuery() {
   }
   
   function onApiResponseData(content, isFinished) {
-    console.log(content, isFinished)
     isQueryEditRunning = !isFinished
     // dirty way of ignoring the running async function after cancellation
     if (isQueryEditDeactivated && isFinished) {
@@ -234,7 +300,6 @@ function mainFormatQuery() {
 
 
 function mainRevertQuery() {
-  console.log(previousQueryContents.length, isQueryEditRunning)
   if (previousQueryContents.length === 0) {
     return
   }
@@ -261,11 +326,6 @@ function mainDatabaseError() {
   var errorMessage = storeQueryError
   const elementErrorMessage = findErrorMessageFromHtml(document.querySelector('div.spread.Visualization'))
   if (elementErrorMessage) {
-    const errorCharacterPosition = findErrorCharacterPositionInMessage(elementErrorMessage)
-    if (errorCharacterPosition) {
-      const errorLineRank = findLineRankCharacterPosition(elementErrorMessage, errorCharacterPosition)
-      databaseErrorPopupElement.setAttribute("error-message", `Error at line ${errorLineRank}.\n`)
-    }
     errorMessage = elementErrorMessage
   }
   const prompt = `${storeQueryContent};\n${errorMessage};\n Here you have 1st a query and then the db error it returned, give the most likely explanation for the origin of the error`
