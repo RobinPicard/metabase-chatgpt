@@ -41,7 +41,6 @@ const dismissElement = document.createElement('img');
 dismissElement.src = chrome.runtime.getURL(dismissIcon);
 dismissElement.addEventListener('click', function(event) {
   databaseErrorPopupElement.remove()
-  databaseErrorPopupElement.setAttribute("error-message", "")
 });
 applyStyleObjectElement(dismissElement, dismissStyle);
 

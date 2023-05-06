@@ -1,4 +1,4 @@
-function chatgptStreamRequest(prompt, streamContentCallback, errorCallback) {
+function chatgptStreamRequest(promptMessages, streamContentCallback, errorCallback) {
 
   chrome.storage.sync.get('metabase_chatgpt_api', function(result) {
     // retrieve the api key from the storage
@@ -7,7 +7,7 @@ function chatgptStreamRequest(prompt, streamContentCallback, errorCallback) {
     } else if (result.metabase_chatgpt_api.status !== "valid") {
       apiError(result.metabase_chatgpt_api.key, null)
     } else {
-      postRequest(result.metabase_chatgpt_api.key, prompt, streamContentCallback)
+      postRequest(result.metabase_chatgpt_api.key, promptMessages, streamContentCallback)
     }
   });
 
@@ -28,7 +28,7 @@ function chatgptStreamRequest(prompt, streamContentCallback, errorCallback) {
     }
   }
 
-  async function postRequest(apiKey, prompt) {
+  async function postRequest(apiKey, promptMessages) {
     // make the api request and read the reponse stream
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -38,8 +38,8 @@ function chatgptStreamRequest(prompt, streamContentCallback, errorCallback) {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        "model": "gpt-3.5-turbo",
-        "messages": [{"role": "user", "content": prompt}],
+        "model": "gpt-4",
+        "messages": promptMessages,
         "temperature": 0,
         "stream": true,
       })

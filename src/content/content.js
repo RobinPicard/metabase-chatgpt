@@ -15,6 +15,7 @@ import findPromptContentFromText from '../utils/findPromptContentFromText.js'
 import addEmptyPatternText from '../utils/addEmptyPatternText.js'
 import buildErrorMessageDisplay from '../utils/buildErrorMessageDisplay.js'
 import highlightErrorLine from '../utils/highlightErrorLine.js'
+import { createFormatQueryMessages, createPromptQueryMessages, createDatabaseErrorMessages } from '../utils/chatgptInputMessages'
 
 
 var previousQueryContents = []
@@ -220,10 +221,10 @@ function mainPromptQuery() {
     const updatedQueryContent = addEmptyPatternText(storeQueryContent)
     pasteTextIntoElement(queryEditorTextarea, updatedQueryContent)
   } else {
-    const prompt = `I'm giving you 1st a sql query and then an instruction prompt. Respond with only the updated query. ${patternMatch.textWithoutPattern}; ${patternMatch.matchAlone}`
     pasteTextIntoElement(queryEditorTextarea, `${patternMatch.matchWithPattern}\n\n`)
     var responseContentQueu = ""
-    chatgptStreamRequest(prompt, onApiResponseData, onApiRequestError)
+    const promptMessages = createPromptQueryMessages(patternMatch.textWithoutPattern, patternMatch.matchAlone)
+    chatgptStreamRequest(promptMessages, onApiResponseData, onApiRequestError)
     document.getElementById(getComponentIdFromVariable({revertQueryButtonElement})).style.display = "block"
   }
 
@@ -264,12 +265,12 @@ function mainFormatQuery() {
   previousQueryContents.push(storeQueryContent)
 
   var queryEditorTextarea = document.querySelector('textarea.ace_text-input');
-  const prompt = `Reformat the query with sqlfluff best practices (4-space indentation, line breaks after SELECT/FROM/WHERE, one column per line for SELECT, commmands in uppercase). Respond with only the updated query: "${storeQueryContent}"`
   var responseContentQueu = ""
 
   deleteTextInputElement(queryEditorTextarea, storeQueryContent)
   document.getElementById(getComponentIdFromVariable({revertQueryButtonElement})).style.display = "block"
-  chatgptStreamRequest(prompt, onApiResponseData, onApiRequestError)
+  const promptMessages = createFormatQueryMessages(storeQueryContent)
+  chatgptStreamRequest(promptMessages, onApiResponseData, onApiRequestError)
 
   function onApiRequestError(errorReason, errorMessage) {
     const variableMessage = buildErrorMessageDisplay(errorReason, errorMessage)
@@ -321,6 +322,7 @@ function mainRevertQuery() {
 
 function mainDatabaseError() {
 
+  databaseErrorPopupElement.setAttribute("error-message", "")
   displayErrorPopupElement()
   // if we can find it, use the error message from the html elements, otherwise stick to the one from the store
   var errorMessage = storeQueryError
@@ -328,8 +330,8 @@ function mainDatabaseError() {
   if (elementErrorMessage) {
     errorMessage = elementErrorMessage
   }
-  const prompt = `${storeQueryContent};\n${errorMessage};\n Here you have 1st a query and then the db error it returned, give the most likely explanation for the origin of the error`
-  chatgptStreamRequest(prompt, onApiResponseData, onApiRequestError)
+  const promptMessages = createDatabaseErrorMessages(storeQueryContent, errorMessage)
+  chatgptStreamRequest(promptMessages, onApiResponseData, onApiRequestError)
 
   function onApiRequestError(errorReason, errorMessage) {
     const variableErrorMessage = buildErrorMessageDisplay(errorReason, errorMessage)
