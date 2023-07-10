@@ -5,23 +5,24 @@ function chatgptStreamRequest(promptMessages, streamContentCallback, errorCallba
     if (!result.metabase_chatgpt_api) {
       apiError(null, null)
     } else if (result.metabase_chatgpt_api.status !== "valid") {
-      apiError(result.metabase_chatgpt_api.key, null)
+      apiError(result.metabase_chatgpt_api, null)
     } else {
       postRequest(result.metabase_chatgpt_api, promptMessages, streamContentCallback)
     }
   });
 
-  function apiError(apiKey, errorMessage) {
+  function apiError(apiDict, errorMessage) {
     // if there was an api key, set the status to invalid
-    if (apiKey) {
+    if (apiDict.key) {
       chrome.storage.sync.set({
         metabase_chatgpt_api: {
-          ...metabase_chatgpt_api,
-          status: "invalid"
+          status: "invalid",
+          key: apiDict.key,
+          modelName: apiDict.modelName
         }
       })
     }
-    if (apiKey) {
+    if (apiDict.key) {
       errorCallback("invalid_api_key", errorMessage)
     } else {
       errorCallback("no_api_key", errorMessage)
@@ -38,7 +39,7 @@ function chatgptStreamRequest(promptMessages, streamContentCallback, errorCallba
         'Authorization': `Bearer ${apiDict.key}`
       },
       body: JSON.stringify({
-        "model": apiDict.modelName,
+        "model": apiDict.modelName || 'gpt-3.5-turbo',
         "messages": promptMessages,
         "temperature": 0,
         "stream": true,
