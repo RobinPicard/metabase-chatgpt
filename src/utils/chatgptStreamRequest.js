@@ -7,7 +7,7 @@ function chatgptStreamRequest(promptMessages, streamContentCallback, errorCallba
     } else if (result.metabase_chatgpt_api.status !== "valid") {
       apiError(result.metabase_chatgpt_api.key, null)
     } else {
-      postRequest(result.metabase_chatgpt_api.key, promptMessages, streamContentCallback)
+      postRequest(result.metabase_chatgpt_api, promptMessages, streamContentCallback)
     }
   });
 
@@ -16,7 +16,7 @@ function chatgptStreamRequest(promptMessages, streamContentCallback, errorCallba
     if (apiKey) {
       chrome.storage.sync.set({
         metabase_chatgpt_api: {
-          key: apiKey,
+          ...metabase_chatgpt_api,
           status: "invalid"
         }
       })
@@ -28,17 +28,17 @@ function chatgptStreamRequest(promptMessages, streamContentCallback, errorCallba
     }
   }
 
-  async function postRequest(apiKey, promptMessages) {
+  async function postRequest(apiDict, promptMessages) {
     // make the api request and read the reponse stream
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${apiDict.key}`
       },
       body: JSON.stringify({
-        "model": "gpt-4",
+        "model": apiDict.modelName,
         "messages": promptMessages,
         "temperature": 0,
         "stream": true,

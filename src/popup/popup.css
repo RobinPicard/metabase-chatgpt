@@ -77,7 +77,6 @@ header h1 {
   padding: 24px;
   gap: 24px;
   width: 100%;
-  height: 271px;
   border-bottom: 1px solid #878C93;
   flex: none;
   align-self: stretch;
@@ -190,5 +189,34 @@ header h1 {
   line-height: 19px;
   color: #FFFFFF;
   box-sizing: border-box;
+  cursor: pointer;
+}
+
+
+#main #model-version-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0px;
+  gap: 8px;
+  height: 35px;
+  width: 100%;
+}
+
+#main #model-version-container span, #main #model-version-container  div {
+  font-size: 16px;
+  height: 24px;
+  line-height: 24px;
+  color: #000000;
+}
+
+#main #model-version-container .model-label {
+  margin: 0px 8px 0px 0px
+}
+
+#main #model-version-container .model-button {
+  font-size: 16px;
+  margin: 0px 4px;
   cursor: pointer;
 }

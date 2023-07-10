@@ -14,20 +14,40 @@ document.addEventListener('DOMContentLoaded', function() {
   var errorMessageElement = document.getElementById('error-message');
   var linkImageElement = document.getElementById('api-key-link-img');
   var headerIconElement = document.getElementById('header-icon-img');
+  var modelElements = document.getElementsByClassName('model-button')
 
   linkImageElement.src = linkIcon
   headerIconElement.src = icon512
 
-  // Retrieve the previously saved API key and status from the Chrome storage
+  // Retrieve the previously saved API key, status and model name from the Chrome storage
   chrome.storage.sync.get('metabase_chatgpt_api', function(result) {
     if (result.metabase_chatgpt_api) {
       api = result.metabase_chatgpt_api
     }
+    updateModelDisplay()
     updateApiStatusDisplay()
   });
 
+  // Highlight the model that is currently selected
+  function updateModelDisplay() {
+    var currentModel = 'gpt-3.5-turbo'
+    if (api && api.modelName === 'gpt-4') {
+      currentModel = 'gpt-4'
+    }
+    for(let i = 0; i < modelElements.length; i++) {
+      if (modelElements[i].id === currentModel) {
+        modelElements[i].style.fontWeight = '600'
+        modelElements[i].style.borderBottom = '2px solid #E5106D'
+      } else {
+        modelElements[i].style.fontWeight = '400'
+        modelElements[i].style.borderBottom = '2px solid transparent'     
+      }
+    }
+  }
+
+  // Display a message corresponding to the status of the current api key
   function updateApiStatusDisplay() {
-    if (Object.keys(api).length === 0) {
+    if (Object.keys(api).length === 0 || api.status === "error") {
       statusValueElement.innerHTML = "Missing API key"
       statusValueElement.style.backgroundColor = "#EDEDED"
       apiInputElement.placeholder = "Enter your API key"
@@ -43,6 +63,19 @@ document.addEventListener('DOMContentLoaded', function() {
     errorMessageElement.innerHTML = errorMessage
   }
 
+  // For each model name element, add a listener that updates the api dict with the model selected + triggers updateModelDisplay
+  Array.from(modelElements).forEach(element => {
+    element.addEventListener('click', function() {
+      api = {
+        ...api,
+        modelName: element.id
+      }
+      updateModelDisplay()
+      chrome.storage.sync.set({'metabase_chatgpt_api': api })
+    });
+  });
+
+  // Add a listener to the submit button that triggers testApiToken to test whether the api key is valid
   submitButtonElement.addEventListener('click', function(event) {
     event.preventDefault();
     if (apiInputElement.value === "") {
@@ -51,6 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
     testApiToken(apiInputElement.value)
   });
 
+  // Check the validity of the provided api key and then update the api dict + call updateApiStatusDisplay
   function testApiToken(apiToken) {
     fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -68,18 +102,24 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(data => {
       if (data?.error?.message) {
         api = {
+          ...api,
           status: "invalid",
           key: apiToken
         }
         errorMessage = data.error.message
       } else if (data?.choices && data?.choices[0]?.message?.content) {
         api = {
+          ...api,
           status: "valid",
           key: apiToken
         }
         errorMessage = ""
       } else {
-        api = {}
+        api = {
+          ...api,
+          status: "error",
+          key: null
+        }
         errorMessage = "Unknown error, sorry"
       }
       updateApiStatusDisplay()
@@ -90,4 +130,5 @@ document.addEventListener('DOMContentLoaded', function() {
       updateApiStatusDisplay()
     });
   }
+
 });
