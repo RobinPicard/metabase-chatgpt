@@ -10,12 +10,15 @@ export function createFormatQueryMessages(initialQuery) {
   ]
 }
 
-export function createPromptQueryMessages(initialQuery, promptMessage) {
+export function createPromptQueryMessages(initialQuery, promptMessage, contextSentences) {
   const systemMessage = (
     "You will receive 2 messages. " +
     "The 1st one will contain a SQL query (or will be empty). " +
     "The 2nd one will contain instructions on how to modify the query (or create it if the previous message was empty). " +
-    "Respond with only the updated/new query"
+    "Respond with only the updated/new query." +
+    "To give you some context on the database, here are the description of 3 tables in the db that were judged related to the prompt through sentence embedding." +
+    "They may not be useful to you. The description follow the model: <table schema>.<table name>: <description (if exists)>, columns: [<field name>, <field description (if exists), foreign key to <table schema>.<table name>(if exists) ; ...]" +
+    " 1) " + contextSentences[0] + " 2) " + contextSentences[1] + " 3) " + contextSentences[2]
   )
   return [
     {"role": "system", "content": systemMessage},

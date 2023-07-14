@@ -13,7 +13,7 @@ function chatgptStreamRequest(promptMessages, streamContentCallback, errorCallba
 
   function apiError(apiDict, errorMessage) {
     // if there was an api key, set the status to invalid
-    if (apiDict.key) {
+    if (apiDict && apiDict.key) {
       chrome.storage.sync.set({
         metabase_chatgpt_api: {
           status: "invalid",
@@ -22,7 +22,7 @@ function chatgptStreamRequest(promptMessages, streamContentCallback, errorCallba
         }
       })
     }
-    if (apiDict.key) {
+    if (apiDict && apiDict.key) {
       errorCallback("invalid_api_key", errorMessage)
     } else {
       errorCallback("no_api_key", errorMessage)

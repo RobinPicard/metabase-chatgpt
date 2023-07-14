@@ -16,6 +16,7 @@ import addEmptyPatternText from '../utils/addEmptyPatternText.js'
 import buildErrorMessageDisplay from '../utils/buildErrorMessageDisplay.js'
 import highlightErrorLine from '../utils/highlightErrorLine.js'
 import { createFormatQueryMessages, createPromptQueryMessages, createDatabaseErrorMessages } from '../utils/chatgptInputMessages'
+import extractDatabaseSchema from '../utils/extractDatabaseSchema.js'
 
 
 var previousQueryContents = []
@@ -26,6 +27,64 @@ var errorMessageDict = {
   errorQuery: null,
   shouldDisplay: false
 }
+var embeddingModel = null
+var embeddingsDict = {}
+
+
+
+
+
+////// embedding-related things
+
+require('@tensorflow/tfjs');
+const use = require('@tensorflow-models/universal-sentence-encoder');
+const tf = require('@tensorflow/tfjs-core');
+
+use.load().then(model => {
+  embeddingModel = model
+  embeddingsCreation()
+});
+
+function embeddingsCreation() {
+  extractDatabaseSchema()
+  .then(schema => {
+    for (const database_id in schema) {
+      embeddingModel.embed(schema[database_id].map(row => row.short)).then(embeddings => {
+        const embeddingData = embeddings.arraySync();
+        var embeddingsList = []
+        schema[database_id].map((obj, index) => {
+          obj.embedding = embeddingData[index];
+          embeddingsList.push(obj)
+        });
+        embeddingsDict[database_id] = embeddingsList
+      })
+    }
+  })
+}
+
+function euclideanDistance(v1, v2) {
+  let sum = 0;
+  for (let i = 0; i < v1.length; i++) {
+    let diff = v1[i] - v2[i];
+    sum += diff * diff;
+  }
+  return Math.sqrt(sum);
+}
+
+async function selectContextSentences(userPrompt) {
+  const embeddings = await embeddingModel.embed([userPrompt])
+  const embeddingData = embeddings.arraySync();
+  const value = embeddingData[0]
+  var distancesList = []
+  for (const row of embeddingsDict["1"]) {
+    distancesList.push({...row, distance: euclideanDistance(value, row.embedding)})
+  }
+  let sortedDistancesList = distancesList.sort((a, b) => a.distance - b.distance);
+  return sortedDistancesList.slice(0, 3).map(row => row.long); 
+}
+
+
+
 
 
 ////////// metabase redux store states's variables and listener //////////
@@ -223,9 +282,13 @@ function mainPromptQuery() {
   } else {
     pasteTextIntoElement(queryEditorTextarea, `${patternMatch.matchWithPattern}\n\n`)
     var responseContentQueu = ""
-    const promptMessages = createPromptQueryMessages(patternMatch.textWithoutPattern, patternMatch.matchAlone)
-    chatgptStreamRequest(promptMessages, onApiResponseData, onApiRequestError)
-    document.getElementById(getComponentIdFromVariable({revertQueryButtonElement})).style.display = "block"
+    selectContextSentences(storeQueryContent).then(contextSentences => {
+      console.log("contextSentences")
+      console.log(contextSentences)
+      const promptMessages = createPromptQueryMessages(patternMatch.textWithoutPattern, patternMatch.matchAlone, contextSentences)
+      chatgptStreamRequest(promptMessages, onApiResponseData, onApiRequestError)
+      document.getElementById(getComponentIdFromVariable({revertQueryButtonElement})).style.display = "block"
+    })
   }
 
   function onApiRequestError(errorReason, errorMessage) {
