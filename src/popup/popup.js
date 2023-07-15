@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (result.metabase_chatgpt_api) {
       configDict = result.metabase_chatgpt_api;
     }
-    if (configDict.currentModel === undefined) {configDict.currentModel = 'gpt-3.5-turbo'}
+    if (configDict.currentModel === undefined) {configDict.currentModel = 'gpt-4'}
     if (configDict.embeddingsActive === undefined) {configDict.embeddingsActive = true}
     updateModelDisplay();
     udpateEmbeddingsDisplay();
@@ -34,9 +34,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Highlight the model that is currently selected
   function updateModelDisplay() {
-    var currentModel = 'gpt-3.5-turbo'
-    if (configDict && configDict.modelName === 'gpt-4') {
-      currentModel = 'gpt-4'
+    var currentModel = 'gpt-4'
+    if (configDict && configDict.modelName === 'gpt-3.5-turbo') {
+      currentModel = 'gpt-3.5-turbo'
     }
     for(let i = 0; i < modelElements.length; i++) {
       if (modelElements[i].id === currentModel) {

@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Metabase - ChatGPT TEST",
+  "name": "Metabase - ChatGPT",
   "version": "1.5",
   "description": "Add helper features to Metabase through requests to the OpenAI API",
   "icons": {
