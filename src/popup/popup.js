@@ -5,8 +5,8 @@ import icon512 from '../../assets/icon512.png'
 
 document.addEventListener('DOMContentLoaded', function() {
 
-  var api = {};
-  var errorMessage = ""
+  var configDict = {};
+  var errorMessage = "";
 
   var apiInputElement = document.getElementById('api-input');
   var submitButtonElement = document.getElementById('submit-button');
@@ -14,24 +14,28 @@ document.addEventListener('DOMContentLoaded', function() {
   var errorMessageElement = document.getElementById('error-message');
   var linkImageElement = document.getElementById('api-key-link-img');
   var headerIconElement = document.getElementById('header-icon-img');
-  var modelElements = document.getElementsByClassName('model-button')
+  var modelElements = document.getElementsByClassName('model-button');
+  var embeddingsElements = document.getElementsByClassName('embeddings-button');
 
   linkImageElement.src = linkIcon
   headerIconElement.src = icon512
 
-  // Retrieve the previously saved API key, status and model name from the Chrome storage
-  chrome.storage.sync.get('metabase_chatgpt_api', function(result) {
+  // Retrieve the previously saved config data (API key, status, model name and embeddings status) from the Chrome storage + display accordingly
+  chrome.storage.local.get('metabase_chatgpt_api', function(result) {
     if (result.metabase_chatgpt_api) {
-      api = result.metabase_chatgpt_api
+      configDict = result.metabase_chatgpt_api;
     }
-    updateModelDisplay()
-    updateApiStatusDisplay()
+    if (configDict.currentModel === undefined) {configDict.currentModel = 'gpt-3.5-turbo'}
+    if (configDict.embeddingsActive === undefined) {configDict.embeddingsActive = true}
+    updateModelDisplay();
+    udpateEmbeddingsDisplay();
+    updateApiStatusDisplay();
   });
 
   // Highlight the model that is currently selected
   function updateModelDisplay() {
     var currentModel = 'gpt-3.5-turbo'
-    if (api && api.modelName === 'gpt-4') {
+    if (configDict && configDict.modelName === 'gpt-4') {
       currentModel = 'gpt-4'
     }
     for(let i = 0; i < modelElements.length; i++) {
@@ -45,33 +49,62 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // Highlight the embeddings option that is currently selected
+  function udpateEmbeddingsDisplay() {
+    var currentChoice = 'embeddings-yes'
+    if (configDict && configDict.embeddingsActive === false) {
+      currentChoice = 'embeddings-no'
+    }
+    for(let i = 0; i < embeddingsElements.length; i++) {
+      if (embeddingsElements[i].id === currentChoice) {
+        embeddingsElements[i].style.fontWeight = '600'
+        embeddingsElements[i].style.borderBottom = '2px solid #E5106D'
+      } else {
+        embeddingsElements[i].style.fontWeight = '400'
+        embeddingsElements[i].style.borderBottom = '2px solid transparent'     
+      }
+    }
+  }
+
   // Display a message corresponding to the status of the current api key
   function updateApiStatusDisplay() {
-    if (Object.keys(api).length === 0 || api.status === "error") {
+    if (!configDict.status || configDict.status === "error") {
       statusValueElement.innerHTML = "Missing API key"
       statusValueElement.style.backgroundColor = "#EDEDED"
       apiInputElement.placeholder = "Enter your API key"
-    } else if (api.status === "invalid") {
+    } else if (configDict.status === "invalid") {
       statusValueElement.innerHTML = "Invalid API key"
       statusValueElement.style.backgroundColor = "#FFBBBB"
-      apiInputElement.placeholder = `${api.key.slice(0, 4)}...${api.key.slice(-3)}`
-    } else if (api.status === "valid") {
+      apiInputElement.placeholder = `${configDict.key.slice(0, 4)}...${configDict.key.slice(-3)}`
+    } else if (configDict.status === "valid") {
       statusValueElement.innerHTML = "Valid API key"
       statusValueElement.style.backgroundColor = "#CAFFAA"
-      apiInputElement.placeholder = `${api.key.slice(0, 4)}...${api.key.slice(-3)}`
+      apiInputElement.placeholder = `${configDict.key.slice(0, 4)}...${configDict.key.slice(-3)}`
     }
     errorMessageElement.innerHTML = errorMessage
   }
 
-  // For each model name element, add a listener that updates the api dict with the model selected + triggers updateModelDisplay
+  // For each model name element, add a listener that updates the config dict with the model selected + triggers updateModelDisplay
   Array.from(modelElements).forEach(element => {
     element.addEventListener('click', function() {
-      api = {
-        ...api,
+      configDict = {
+        ...configDict,
         modelName: element.id
       }
       updateModelDisplay()
-      chrome.storage.sync.set({'metabase_chatgpt_api': api })
+      chrome.storage.local.set({'metabase_chatgpt_api': configDict })
+    });
+  });
+
+  // For each embeddings option element, add a listener that updates the config dict with the option selected + triggers udpateEmbeddingsDisplay
+  Array.from(embeddingsElements).forEach(element => {
+    element.addEventListener('click', function() {
+      configDict = {
+        ...configDict,
+        embeddingsActive: element.id === "embeddings-yes" ? true : false
+      }
+      udpateEmbeddingsDisplay()
+      chrome.storage.local.set({'metabase_chatgpt_api': configDict })
     });
   });
 
@@ -84,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
     testApiToken(apiInputElement.value)
   });
 
-  // Check the validity of the provided api key and then update the api dict + call updateApiStatusDisplay
+  // Check the validity of the provided api key and then update the config dict + call updateApiStatusDisplay
   function testApiToken(apiToken) {
     fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -101,29 +134,29 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(response => response.json())
     .then(data => {
       if (data?.error?.message) {
-        api = {
-          ...api,
+        configDict = {
+          ...configDict,
           status: "invalid",
           key: apiToken
         }
         errorMessage = data.error.message
       } else if (data?.choices && data?.choices[0]?.message?.content) {
-        api = {
-          ...api,
+        configDict = {
+          ...configDict,
           status: "valid",
           key: apiToken
         }
         errorMessage = ""
       } else {
-        api = {
-          ...api,
+        configDict = {
+          ...configDict,
           status: "error",
           key: null
         }
         errorMessage = "Unknown error, sorry"
       }
       updateApiStatusDisplay()
-      chrome.storage.sync.set({'metabase_chatgpt_api': api })
+      chrome.storage.local.set({'metabase_chatgpt_api': configDict })
     })
     .catch(error => {
       errorMessage = "Something went wrong sorry, could not make the API request"

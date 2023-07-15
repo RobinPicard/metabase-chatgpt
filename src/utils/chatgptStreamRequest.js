@@ -1,45 +1,33 @@
-function chatgptStreamRequest(promptMessages, streamContentCallback, errorCallback) {
+function chatgptStreamRequest(configDict, promptMessages, streamContentCallback, errorCallback) {
 
-  chrome.storage.sync.get('metabase_chatgpt_api', function(result) {
-    // retrieve the api key from the storage
-    if (!result.metabase_chatgpt_api) {
-      apiError(null, null)
-    } else if (result.metabase_chatgpt_api.status !== "valid") {
-      apiError(result.metabase_chatgpt_api, null)
-    } else {
-      postRequest(result.metabase_chatgpt_api, promptMessages, streamContentCallback)
-    }
-  });
-
-  function apiError(apiDict, errorMessage) {
+  function apiError(configDict, errorMessage) {
     // if there was an api key, set the status to invalid
-    if (apiDict && apiDict.key) {
-      chrome.storage.sync.set({
+    if (configDict && configDict.key) {
+      chrome.storage.local.set({
         metabase_chatgpt_api: {
+          ...configDict,
           status: "invalid",
-          key: apiDict.key,
-          modelName: apiDict.modelName
         }
       })
     }
-    if (apiDict && apiDict.key) {
+    if (configDict && configDict.key) {
       errorCallback("invalid_api_key", errorMessage)
     } else {
       errorCallback("no_api_key", errorMessage)
     }
   }
 
-  async function postRequest(apiDict, promptMessages) {
+  async function postRequest(configDict, promptMessages) {
     // make the api request and read the reponse stream
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiDict.key}`
+        'Authorization': `Bearer ${configDict.key}`
       },
       body: JSON.stringify({
-        "model": apiDict.modelName || 'gpt-3.5-turbo',
+        "model": configDict.modelName || 'gpt-3.5-turbo',
         "messages": promptMessages,
         "temperature": 0,
         "stream": true,
@@ -50,7 +38,7 @@ function chatgptStreamRequest(promptMessages, streamContentCallback, errorCallba
     if (!response.ok) {
       const errorData = await response.json();
       const errorMessage = errorData?.error?.message
-      apiError(apiKey, errorData.error.message)
+      apiError(configDict, errorMessage)
       return;
     }
   
@@ -85,6 +73,8 @@ function chatgptStreamRequest(promptMessages, streamContentCallback, errorCallba
 
     await readStream();
   }
+
+  postRequest(configDict, promptMessages, streamContentCallback)
 
 }
   

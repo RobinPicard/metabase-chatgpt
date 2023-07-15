@@ -10,6 +10,7 @@
   "permissions": [
     "scripting",
     "storage",
+    "tabs",
     "webNavigation"
   ],
   "host_permissions": [

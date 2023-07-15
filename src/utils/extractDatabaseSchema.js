@@ -1,11 +1,8 @@
 async function extractDatabaseSchema() {
 
-  const databasesResponse = await apiGetRequest('/api/database?saved=true&include=tables')
-  if (databasesResponse === undefined) {
-    return
-  }
-
   let result = {}
+
+  const databasesResponse = await apiGetRequest('/api/database?saved=true&include=tables')
 
   for (const database of databasesResponse.data) {
     const tables = await getTables(database.tables)
@@ -16,15 +13,12 @@ async function extractDatabaseSchema() {
 }
 
 async function apiGetRequest(url) {
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    return undefined;
-  }
+  const response = await fetch(url);
+  const data = await response.json();
+  return data;
 }
 
+// provided a list of tables, return this same list but formatted to be used for our embeddings
 async function getTables(databaseTables) {
   let tables = []
 
@@ -42,9 +36,10 @@ async function getTables(databaseTables) {
     }
   }
 
-  return tables.map(table => formatTableOutput(table))
+  return tables.map(table => formatOutput(table))
 }
 
+// return the name of a field given its id
 function findFieldNameFromId(tables, id) {
   for (const table of tables) {
     for (const field of table.fields) {
@@ -55,6 +50,7 @@ function findFieldNameFromId(tables, id) {
   }
 }
 
+// select the relevant keys for a field
 function formatField(field) {
   return {
     id: field.id,
@@ -65,6 +61,7 @@ function formatField(field) {
   }
 }
 
+// select the relevant keys for a table
 function formatTable(table, fields) {
   return {
     id: table.id,
@@ -75,7 +72,8 @@ function formatTable(table, fields) {
   }
 }
 
-function formatTableOutput(table) {
+// given a table with its fields, return formatted sentences to be used in api requests
+function formatOutput(table) {
   const fields = table.fields.map(field => `${field.name}${field.description ? ", " + field.description : ""}${field.fk_target_field_id ? ", foreign key to " + field.fk_target_field_id : ""}`)
   return {
     short: `${table.schema}.${table.name}`,

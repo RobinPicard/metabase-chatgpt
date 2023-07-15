@@ -4,6 +4,7 @@ if (reduxStore) {
 
   var latestQueryContent = undefined
   var latestQueryError = undefined
+  var latestDatabaseSelected = undefined
   
   // triggered by each update of the store, check whether the fields that interest us have changed
   const onReduxStoreStateUpdate = () => {
@@ -17,6 +18,11 @@ if (reduxStore) {
     if (queryError !== latestQueryError) {
       sendMessage(queryError, 'METABASE_CHATGPT_QUERY_ERROR_STATE');
       latestQueryError = queryError;
+    }
+    const databaseSelected = state?.qb?.card?.dataset_query?.database
+    if (databaseSelected !== latestDatabaseSelected) {
+      sendMessage(databaseSelected, 'METABASE_CHATGPT_DATABASE_SELECTED_STATE');
+      latestDatabaseSelected = databaseSelected;
     }
   }
   
