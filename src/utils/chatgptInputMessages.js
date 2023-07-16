@@ -38,7 +38,8 @@ export function createDatabaseErrorMessages(initialQuery, errorMessage, contextS
     "You will receive 2 messages. "
     + "The 1st one will contain a SQL query. "
     + "The 2nd one will contain an error message returned by the database. "
-    + "Give the most likely explanation for the origin of the error"
+    + "Give the most likely explanation for the origin of the error. "
+    + "Do your best to be short, go straight to the point. "
   )
   if (contextSentences) {
     const additionalContext = (

@@ -20,9 +20,6 @@ function chatgptStreamRequest(configDict, promptMessages, streamContentCallback,
   async function postRequest(configDict, promptMessages) {
     // make the api request and read the reponse stream
 
-    console.log('configDict.modelName', configDict.modelName)
-    console.log('promptMessages', promptMessages)
-
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {

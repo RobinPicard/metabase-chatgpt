@@ -1,6 +1,3 @@
-require('@tensorflow/tfjs');
-const use = require('@tensorflow-models/universal-sentence-encoder');
-
 import findLineRankCharacterPosition from '../utils/findLineRankCharacterPosition.js'
 import findErrorCharacterPositionInMessage from '../utils/findErrorCharacterPositionInMessage.js'
 import findErrorMessageFromHtml from '../utils/findErrorMessageFromHtml.js'
@@ -78,6 +75,8 @@ function setStoreListener() {
 
 
 function embeddingsInit() {
+  require('@tensorflow/tfjs');
+  const use = require('@tensorflow-models/universal-sentence-encoder');
   // load the embeddings model + trigger updateEmbeddings is there are no embeddings saved yet
   use.load().then(model => {
     embeddingModel = model
@@ -392,7 +391,6 @@ function mainRevertQuery() {
   var queryEditorTextarea = document.querySelector('textarea.ace_text-input');
   deleteTextInputElement(queryEditorTextarea, storeQueryContent)
   pasteTextIntoElement(queryEditorTextarea, previousQueryContents.pop())
-  console.group(previousQueryContents.length)
   if (previousQueryContents.length === 0) {
     document.getElementById(getComponentIdFromVariable({revertQueryButtonElement})).style.display = "none"
   }
