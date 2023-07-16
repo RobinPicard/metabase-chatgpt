@@ -82,7 +82,7 @@ function embeddingsInit() {
   use.load().then(model => {
     embeddingModel = model
     if (!configDict.embeddings) {
-      updateEmbeddings()
+      onClickUpdateEmbeddings()
     }
   });
 }

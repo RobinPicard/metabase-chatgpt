@@ -20,6 +20,9 @@ function chatgptStreamRequest(configDict, promptMessages, streamContentCallback,
   async function postRequest(configDict, promptMessages) {
     // make the api request and read the reponse stream
 
+    console.log('configDict.modelName', configDict.modelName)
+    console.log('promptMessages', promptMessages)
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -27,7 +30,7 @@ function chatgptStreamRequest(configDict, promptMessages, streamContentCallback,
         'Authorization': `Bearer ${configDict.key}`
       },
       body: JSON.stringify({
-        "model": configDict.modelName || 'gpt-3.5-turbo',
+        "model": configDict.modelName,
         "messages": promptMessages,
         "temperature": 0,
         "stream": true,

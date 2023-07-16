@@ -77,7 +77,7 @@ function formatOutput(table) {
   const fields = table.fields.map(field => `${field.name}${field.description ? ", " + field.description : ""}${field.fk_target_field_id ? ", foreign key to " + field.fk_target_field_id : ""}`)
   return {
     short: `${table.schema}.${table.name}`,
-    long: `${table.name}${table.description ? ": " + table.description : ""}, columns: ${fields.join(" ; ")}`
+    long: `${table.schema}.${table.name}${table.description ? ": " + table.description : ""}, columns: ${fields.join(" ; ")}`
   }
 }
 
