@@ -75,6 +75,7 @@ function setStoreListener() {
 
 
 function embeddingsInit() {
+  console.log('start init')
   require('@tensorflow/tfjs');
   const use = require('@tensorflow-models/universal-sentence-encoder');
   // load the embeddings model + trigger updateEmbeddings is there are no embeddings saved yet
@@ -100,8 +101,13 @@ function onClickUpdateEmbeddings() {
 
 async function updateEmbeddings() {
   // update the value of configDict.embeddings
+  console.log('start extractDatabaseSchema')
   const schema = await extractDatabaseSchema()
+  console.log('start createEmbeddings')
+  console.log(schema)
   const embeddedSchema = await createEmbeddings(schema, embeddingModel)
+  console.log('finished')
+  console.log(embeddedSchema)
   configDict.embeddings = embeddedSchema
   chrome.storage.local.set({'metabase_chatgpt_api': configDict })
   return true
