@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (result.metabase_chatgpt_api) {
       configDict = result.metabase_chatgpt_api;
     }
-    if (configDict.currentModel === undefined) {configDict.currentModel = 'gpt-4'}
+    if (configDict.modelName === undefined) {configDict.modelName = 'gpt-4'}
     if (configDict.embeddingsActive === undefined) {configDict.embeddingsActive = true}
     updateModelDisplay();
     udpateEmbeddingsDisplay();

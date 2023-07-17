@@ -18,7 +18,7 @@ import buildErrorMessageDisplay from '../utils/buildErrorMessageDisplay.js'
 import highlightErrorLine from '../utils/highlightErrorLine.js'
 import { createFormatQueryMessages, createPromptQueryMessages, createDatabaseErrorMessages } from '../utils/chatgptInputMessages'
 import extractDatabaseSchema from '../utils/extractDatabaseSchema.js'
-import computeEuclideanDistance from '../utils/computeEuclideanDistance.js'
+import computeCosineSimilarity from '../utils/computeCosineSimilarity.js'
 import createEmbeddings from '../utils/createEmbeddings.js'
 
 
@@ -75,10 +75,9 @@ function setStoreListener() {
 
 
 function embeddingsInit() {
-  console.log('start init')
   require('@tensorflow/tfjs');
   const use = require('@tensorflow-models/universal-sentence-encoder');
-  // load the embeddings model + trigger updateEmbeddings is there are no embeddings saved yet
+  // load the embeddings model + trigger updateEmbeddings is there are no embeddings saved in the configDict yet
   use.load().then(model => {
     embeddingModel = model
     if (!configDict.embeddings) {
@@ -88,6 +87,7 @@ function embeddingsInit() {
 }
 
 function onClickUpdateEmbeddings() {
+  // launch the gif animation and call updateEmbeddings
   if (isEmbeddingUpdateRunning) {
     return
   }
@@ -101,13 +101,10 @@ function onClickUpdateEmbeddings() {
 
 async function updateEmbeddings() {
   // update the value of configDict.embeddings
-  console.log('start extractDatabaseSchema')
+  console.log("Retrieving the database structure through the Metabase API, this can take a while")
   const schema = await extractDatabaseSchema()
-  console.log('start createEmbeddings')
-  console.log(schema)
+  console.log("Creating the ambeddings, this can take a while")
   const embeddedSchema = await createEmbeddings(schema, embeddingModel)
-  console.log('finished')
-  console.log(embeddedSchema)
   configDict.embeddings = embeddedSchema
   chrome.storage.local.set({'metabase_chatgpt_api': configDict })
   return true
@@ -118,19 +115,19 @@ async function selectContextSentences(userInput) {
   const inputEmbedding = await embeddingModel.embed([userInput])
   const inputEmbeddingData = inputEmbedding.arraySync();
   const value = inputEmbeddingData[0]
-  var distancesList = []
+  var similaritiesList = []
   for (const row of configDict.embeddings[storeDatabaseSelected]) {
-    distancesList.push({...row, distance: computeEuclideanDistance(value, row.embedding)})
+    similaritiesList.push({...row, similarity: computeCosineSimilarity(value, row.embedding)})
   }
-  let sortedDistancesList = distancesList.sort((a, b) => a.distance - b.distance);
-  return sortedDistancesList.slice(0, 3).map(row => row.long); 
+  similaritiesList.sort((a, b) => b.similarity - a.similarity);
+  return similaritiesList.slice(0, 3).map(row => row.long); 
 }
 
 
 ////////////// check the state of the DOM to see whether our elements should be inserted/removed + add listeners to buttons //////////////
 
 
-function setupElements(embeddingsActive) {
+function setupElements() {
 
   function onElementAddedOrRemoved(mutationList, observer) {
     setupQueryEditingElements()
@@ -460,7 +457,7 @@ function main() {
       configDict = result.metabase_chatgpt_api
     }
     setStoreListener()
-    setupElements(configDict.embeddingsActive)
+    setupElements()
     configDict.embeddingsActive === true ? embeddingsInit() : null
   });
 }

@@ -11,7 +11,8 @@
     "scripting",
     "storage",
     "tabs",
-    "webNavigation"
+    "webNavigation",
+    "unlimitedStorage"
   ],
   "host_permissions": [
     "*://*/question*"
