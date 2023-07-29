@@ -5,9 +5,16 @@ async function extractDatabaseSchema() {
   const databasesResponse = await apiGetRequest('/api/database?saved=true&include=tables')
 
   for (const database of databasesResponse.data) {
-    const tables = await getTables(database.tables)
-    result[database.id] = tables
+    const tables = await getTables(database.tables);
+    result[database.id] = tables;
   }
+
+  // remove empty db if there's any
+  Object.keys(result).forEach((key) => {
+    if (Array.isArray(result[key]) && result[key].length === 0) {
+        delete result[key];
+    }
+});
 
   return result
 }
@@ -23,6 +30,10 @@ async function getTables(databaseTables) {
   let tables = []
 
   for (const table of databaseTables) {
+    // skip saved questions
+    if (/^card__/.test(table.id)) {
+      continue;
+    }
     const tableResponse = await apiGetRequest(`/api/table/${table.id}/query_metadata`)
     const fields = tableResponse.fields.filter(field => field.active).map(field => formatField(field))
     tables.push(formatTable(table, fields))

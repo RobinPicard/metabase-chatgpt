@@ -46,7 +46,7 @@ imageElement.src = chrome.runtime.getURL(loadImage);
 applyStyleObjectElement(imageElement, imageStyle);
 
 const tooltipElement = document.createElement('div');
-tooltipElement.innerHTML = "Click to launch an update of the database structure embeddings"
+tooltipElement.innerHTML = "Click to launch an update of the database structure embedding"
 applyStyleObjectElement(tooltipElement, tootltipStyle);
 
 updateEmbeddingsButtonElement.appendChild(imageElement)
