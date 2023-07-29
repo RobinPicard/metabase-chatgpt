@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Metabase - ChatGPT",
-  "version": "1.4",
+  "version": "1.5",
   "description": "Add helper features to Metabase through requests to the OpenAI API",
   "icons": {
     "128": "chrome_icons/icon128.png",
@@ -10,7 +10,9 @@
   "permissions": [
     "scripting",
     "storage",
-    "webNavigation"
+    "tabs",
+    "webNavigation",
+    "unlimitedStorage"
   ],
   "host_permissions": [
     "*://*/question*"
