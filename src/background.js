@@ -9,7 +9,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       // only consider the page if it has a url pattern of the native query editor of Metabase
       url.includes("/question")
       && (
-        url.includes("metabase")
+        url.includes("meta")
         || url.includes("localhost")
         || url.includes("127.0.0.1")
       )
