@@ -136,7 +136,7 @@ function setupElements() {
   }
 
   function setupQueryEditingElements() {
-    var openedEditorCloseLinkElement = document.querySelector('div.NativeQueryEditor a.Query-label:not(.hide)');
+    var openedEditorCloseLinkElement = document.querySelector('[data-testid="visibility-toggler"]');
     var existingUpdateQueryContainerElement = document.getElementById(getComponentIdFromVariable({updateQueryContainerElement}))
     if (!existingUpdateQueryContainerElement && !openedEditorCloseLinkElement) {
       return
