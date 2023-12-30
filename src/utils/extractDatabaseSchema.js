@@ -14,7 +14,7 @@ async function extractDatabaseSchema() {
     if (Array.isArray(result[key]) && result[key].length === 0) {
         delete result[key];
     }
-});
+  });
 
   return result
 }
