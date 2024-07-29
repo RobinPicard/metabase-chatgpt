@@ -323,11 +323,13 @@ function main() {
     version = response;
   })
   chrome.storage.local.get('metabase_chatgpt', function(result) {
-    setStoreListener();
-    setupElements();
     if (result.metabase_chatgpt) {
       configDict = result.metabase_chatgpt;
-    } else {
+    }
+    setStoreListener();
+    setupElements();
+    console.log('result.metabase_chatgpt', result.metabase_chatgpt)
+    if (!result.metabase_chatgpt?.schema){
       onClickUpdateDatabasesSchema();
     }
   });
