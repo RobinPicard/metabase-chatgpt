@@ -23,7 +23,7 @@
   "web_accessible_resources": [
     {
       "resources": ["dist/assets/*", "dist/injectedScriptStoreUpdates.js"],
-      "matches": ["*://*/question*"]
+      "matches": ["<all_urls>"]
     }
   ],
   "action": {
