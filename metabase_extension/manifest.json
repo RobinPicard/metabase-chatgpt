@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Metabase - ChatGPT",
+  "name": "Metabase-ChatGPT",
   "version": "2.0",
-  "description": "Add helper features to Metabase through requests to the OpenAI API",
+  "description": "Lets ChatGPT write SQL queries and analyze errors for you in Metabase.",
   "icons": {
     "128": "chrome_icons/icon128.png",
     "48": "chrome_icons/icon48.png"
@@ -10,7 +10,9 @@
   "permissions": [
     "scripting",
     "storage",
-    "webNavigation"
+    "tabs",
+    "webNavigation",
+    "unlimitedStorage"
   ],
   "host_permissions": [
     "*://*/question*"
@@ -21,10 +23,16 @@
   "web_accessible_resources": [
     {
       "resources": ["dist/assets/*", "dist/injectedScriptStoreUpdates.js"],
-      "matches": ["*://*/*"]
+      "matches": ["*://*/question*"]
     }
   ],
   "action": {
     "default_popup": "dist/popup.html"
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*/question*"],
+      "css": ["dist/content.css"]
+    }
+  ]
 }

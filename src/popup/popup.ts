@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
   chrome.storage.local.get('metabase_chatgpt', function(result: {metabase_chatgpt?: ConfigDict}) {
     if (result.metabase_chatgpt) {
       configDict = result.metabase_chatgpt;
+      console.log("hereeeeeee", result.metabase_chatgpt)
     }
     if (!configDict.modelName) {
       configDict.modelName = 'gpt-4o-mini';
@@ -86,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
       // 600 is a constant for the rest of the prompt and the answer (everything except the schema)
-      const numTokens = Math.floor(numCharacters / 3) + 600;
+      const numTokens = Math.floor(numCharacters / 4) + 600;
       const gpt4oCost = Math.round(numTokens * priceGpt4o / 100) / 10000;
       const gpt4oMiniCost = Math.round(numTokens * priceGpt4oMini / 100) / 10000;
       costEstimationElement.innerHTML = (
