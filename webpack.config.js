@@ -4,10 +4,13 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
   entry: {
-    background: './src/background.js',
-    content: './src/content/content.js',
-    injectedScriptStoreUpdates: './src/content/injectedScriptStoreUpdates.js',
-    popup: './src/popup/popup.js'
+    background: './src/background.ts',
+    content: './src/content/content.ts',
+    injectedScriptStoreUpdates: './src/content/injectedScriptStoreUpdates.ts',
+    popup: './src/popup/popup.ts'
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js'],
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -40,6 +43,11 @@ module.exports = {
         ]
       },
       {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
+      },
+      {
         test: /\.js$/,
         exclude: /node_modules/,
         use: {
@@ -50,7 +58,7 @@ module.exports = {
         },
       },
       {
-        test: /\.s?css$/,
+        test: /\.css$/,
         use: [MiniCssExtractPlugin.loader, 'css-loader'],
       },
     ]

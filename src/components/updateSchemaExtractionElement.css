@@ -1,0 +1,36 @@
+#updateSchemaExtractionElement {
+  position: relative;
+  height: 36px;
+  width: 36px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 8px;
+  color: #509ee3;
+  background-color: #519EE3;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#updateSchemaExtractionElement .img {
+  width: 20px;
+  height: 20px;
+}
+
+#updateSchemaExtractionElement .tooltip {
+  visibility: hidden;
+  position: absolute;
+  top: 50px;
+  right: 0px;
+  z-index: 10;
+  width: 120px;
+  font-size: 12px;
+  padding: 10px;
+  background-color: rgb(84, 86, 91);
+  border-radius: 5px;
+  color: white;
+}
+
+#updateSchemaExtractionElement:hover .tooltip {
+  visibility: visible;
+}

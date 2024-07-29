@@ -1,0 +1,25 @@
+#promptQueryButtonElement {
+  position: relative;
+  height: 36px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px 16px;
+  gap: 10px;
+  color: #509ee3;
+  background-color: #519EE3;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#promptQueryButtonElement .img {
+  width: 16px;
+  height: 16px;
+}
+
+#promptQueryButtonElement .text {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 16px;
+  color: #FFFFFF;
+}
