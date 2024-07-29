@@ -14,21 +14,18 @@
       <span id="status-value"></span>
     </div>
     <div id="main">
-      <p id="api-key-paragraph">Please enter a valid API key for your OpenAI account to use the service.</p>
-      <a id="api-key-link" href="https://platform.openai.com/account/api-keys" target="_blank">
-        <span>learn more here</span>
-        <img id="api-key-link-img">
-      </a>
+      <p id="api-key-paragraph">
+        Please enter a valid API key for your OpenAI account to use the service. 
+        <a id="api-key-link" href="https://platform.openai.com/account/api-keys" target="_blank">
+          learn more here
+        </a>
+      </p>
       <div id="model-version-container">
-        <span class="model-label">Model version:</span>
-        <div class="model-button" id="gpt-3.5-turbo">gpt-3.5-turbo</div>
-        <div class="model-button" id="gpt-4">gpt-4</div>
+        <span class="model-label">Model:</span>
+        <div class="model-button" id="gpt-4o">gpt-4o</div>
+        <div class="model-button" id="gpt-4o-mini">gpt-4o-mini</div>
       </div>
-      <div id="embeddings-container">
-        <span class="embeddings-label">Use database structure embedding:</span>
-        <div class="embeddings-button" id="embeddings-yes">yes</div>
-        <div class="embeddings-button" id="embeddings-no">no</div>
-      </div>
+      <div id="cost-estimation-container"></div>
       <div id="input-container">
         <p>API key:</p>
         <input type="text" name="api-key" id="api-input">
@@ -38,6 +35,6 @@
         <div id="submit-button">Submit</div>
       </div>
     </div>
-    <script src="./popup.js"></script>
+    <script src="./popup.ts"></script>
   </body>
 </html>

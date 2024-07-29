@@ -1,0 +1,13 @@
+#databaseErrorButtonElement {
+  position: absolute;
+  top: 0px;
+  right: 16px;
+  height: 36px;
+  line-height: 36px;
+  padding: 0px 16px;
+  color: #509ee3;
+  background-color: #509ee333;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 60;
+}

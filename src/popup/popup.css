@@ -86,7 +86,6 @@ header h1 {
 /* explanation part part */
 
 #api-key-paragraph {
-  height: 38px;
   font-family: 'Libre Franklin';
   font-style: normal;
   font-weight: 400;
@@ -98,13 +97,7 @@ header h1 {
 }
 
 #api-key-link {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
   padding: 0px;
-  gap: 8px;
-  height: 19px;
-  flex: none;
 }
 
 #api-key-link span {
@@ -151,34 +144,26 @@ header h1 {
   cursor: pointer;
 }
 
-/* embeddings part */
+/* cost estimation part */
 
-#embeddings-container {
+#cost-estimation-container {
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: flex-start;
   padding: 0px;
-  gap: 8px;
-  height: 24px;
   width: 100%;
-}
-
-#embeddings-container span, #main #embeddings-container  div {
   font-size: 16px;
-  height: 24px;
-  line-height: 24px;
-  color: #000000;
+  color: #393a3b;
+  background-color: #FFF4F8;
+  border-radius: 4px;
+  padding: 12px;
+  box-sizing: border-box;
 }
 
-#embeddings-container .embeddings-label {
-  margin: 0px 8px 0px 0px
-}
-
-#embeddings-container .embeddings-button {
-  font-size: 16px;
-  margin: 0px 4px;
-  cursor: pointer;
+#cost-estimation-container ul {
+  margin: 0;
+  padding-inline-start: 20px;
 }
 
 /* api key input part */
